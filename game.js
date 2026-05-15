@@ -73,15 +73,49 @@ class Particle {
 }
 
 
+let assetsLoaded = 0;
+const totalAssets = Object.keys(assets).length;
+
+function onAssetLoad() {
+    assetsLoaded++;
+    console.log(`Asset loaded: ${assetsLoaded}/${totalAssets}`);
+    if (assetsLoaded === totalAssets) {
+        startBtn.innerText = "DÉMARRER";
+        startBtn.disabled = false;
+        console.log("All assets ready.");
+    }
+}
+
+// Disable start button until loaded
+startBtn.disabled = true;
+startBtn.innerText = "CHARGEMENT...";
+
+Object.values(assets).forEach(img => {
+    img.onload = onAssetLoad;
+    img.onerror = (e) => {
+        console.error("Failed to load asset:", img.src);
+        onAssetLoad();
+    };
+});
+
+// Set sources AFTER setting up listeners
 assets.background.src = 'assets/background.png';
 assets.player.src = 'assets/player.png';
 assets.tiles.src = 'assets/tiles.png';
 assets.coin.src = 'assets/coin.png';
 assets.enemy.src = 'assets/enemy.png';
 
+
+
 // Input Handling
 const keys = {};
-window.addEventListener('keydown', e => keys[e.code] = true);
+window.addEventListener('keydown', e => {
+    keys[e.code] = true;
+    // Prevent scrolling with arrows/space
+    if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
+        e.preventDefault();
+    }
+});
 window.addEventListener('keyup', e => keys[e.code] = false);
 
 class Player {
@@ -91,21 +125,24 @@ class Player {
 
     reset() {
         this.x = 100;
-        this.y = canvas.height - CONFIG.tileSize - 200;
+        // Ensure canvas.height is valid
+        const h = canvas.height || window.innerHeight;
+        this.y = h - 300; 
         this.vx = 0;
         this.vy = 0;
         this.width = CONFIG.playerWidth;
         this.height = CONFIG.playerHeight;
         this.grounded = false;
-        this.facing = 1; // 1 for right, -1 for left
+        this.facing = 1;
+        console.log("Player reset at:", this.x, this.y);
     }
 
     update() {
-        // Movement
-        if (keys['ArrowRight']) {
+        // Movement (Arrow + WASD)
+        if (keys['ArrowRight'] || keys['KeyD']) {
             this.vx = CONFIG.speed;
             this.facing = 1;
-        } else if (keys['ArrowLeft']) {
+        } else if (keys['ArrowLeft'] || keys['KeyA']) {
             this.vx = -CONFIG.speed;
             this.facing = -1;
         } else {
@@ -113,10 +150,12 @@ class Player {
         }
 
         // Jump
-        if (keys['Space'] && this.grounded) {
+        if ((keys['Space'] || keys['ArrowUp'] || keys['KeyW']) && this.grounded) {
             this.vy = CONFIG.jumpForce;
             this.grounded = false;
+            console.log("Jump!");
         }
+
 
         // Gravity
         this.vy += CONFIG.gravity;
@@ -145,16 +184,34 @@ class Player {
 
 
     draw() {
+        const drawX = Math.round(this.x - cameraX);
+        const drawY = Math.round(this.y);
+
+        // Debug: Draw a box where the player should be
+        /*
+        ctx.strokeStyle = 'red';
+        ctx.strokeRect(drawX, drawY, this.width, this.height);
+        */
+
+        if (!assets.player.complete || assets.player.naturalWidth === 0) {
+            // Fallback: Blue box
+            ctx.fillStyle = '#00f2fe';
+            ctx.fillRect(drawX, drawY, this.width, this.height);
+            return;
+        }
+
         ctx.save();
         if (this.facing === -1) {
-            ctx.translate(this.x - cameraX + this.width, this.y);
+            ctx.translate(drawX + this.width, drawY);
             ctx.scale(-1, 1);
             ctx.drawImage(assets.player, 0, 0, this.width, this.height);
         } else {
-            ctx.drawImage(assets.player, this.x - cameraX, this.y, this.width, this.height);
+            ctx.drawImage(assets.player, drawX, drawY, this.width, this.height);
         }
         ctx.restore();
     }
+
+
 }
 
 class Level {
@@ -253,21 +310,25 @@ function init() {
     restartBtn.addEventListener('click', startGame);
 }
 
+
 function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 }
 
 function startGame() {
+    console.log("Starting game...");
     isPlaying = true;
     score = 0;
     scoreDisplay.innerText = '0';
+    resize(); // Ensure canvas is sized before reset
     player.reset();
     level = new Level();
     menu.classList.add('hidden');
     gameOverUI.classList.add('hidden');
     requestAnimationFrame(gameLoop);
 }
+
 
 function gameLoop(timestamp) {
     if (!isPlaying) return;

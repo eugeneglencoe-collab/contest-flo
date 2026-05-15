@@ -2,44 +2,37 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aether Leap | Mario Competitor</title>
+    <title>Stranger Things: The 16-Bit Rift</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="ui-container">
-        <div id="header">
-            <div id="score-box" class="glass">
-                <img src="assets/coin.png" alt="Score" class="ui-icon">
-                <span id="score">0</span>
-            </div>
-            <div id="timer-box" class="glass">
-                TEMPS: <span id="timer">00:00</span>
-            </div>
-        </div>
-
-        <div id="menu" class="glass">
-            <h1>AETHER LEAP</h1>
-            <p>Le nouveau standard de la plateforme.</p>
-            <button id="start-btn" class="premium-btn">DÉMARRER</button>
-            <div class="controls-hint">
-                <span>[←] [→] Bouger</span>
-                <span>[ESPACE] Sauter</span>
+    <div id="vhs-overlay"></div> <div id="game-wrapper">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="dialogue-container" class="hidden">
+            <div id="portrait"></div>
+            <div id="text-box">
+                <h3 id="speaker-name">Eleven</h3>
+                <p id="message"></p>
+                <span class="blink-arrow">▼</span>
             </div>
         </div>
 
-        <div id="game-over" class="glass hidden">
-            <h2>FIN DE PARTIE</h2>
-            <p>Score Final: <span id="final-score">0</span></p>
-            <button id="restart-btn" class="premium-btn">RÉESSAYER</button>
+        <div id="shop-screen" class="hidden">
+            <div class="shop-header">--- BAZAAR DE HAWKINS ---</div>
+            <div id="inventory-info">Énergie : <span id="coin-count">0</span></div>
+            <div class="shop-grid">
+                <div class="item" onclick="buy('speed')">📦 Gaufre (Vitesse) - 10</div>
+                <div class="item" onclick="buy('jump')">👟 Baskets (Saut) - 20</div>
+                <div class="item" onclick="buy('power')">🔋 Lampe (Puissance) - 30</div>
+            </div>
+            <button onclick="closeShop()">RETOUR AU MONDE À L'ENVERS</button>
         </div>
     </div>
 
-    <canvas id="gameCanvas"></canvas>
+    <audio id="bgMusic" loop src="assets/synthwave_loop.mp3"></audio>
+    <audio id="sfxCoin" src="assets/coin.mp3"></audio>
 
-    <script src="game.js" type="module"></script>
+    <script src="game.js"></script>
 </body>
 </html>
